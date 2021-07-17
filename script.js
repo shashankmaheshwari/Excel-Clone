@@ -1,3 +1,27 @@
+let defaultProperties={
+    text: "",
+    "font-weight": "",
+    "font-style": "",
+    "text-decoration": "",
+    "text-align": "left",
+    "background-color": "white",
+    "color": "black",
+    "font-family": "Noto sans",
+    "font-size": 14
+
+}
+
+let cellData={
+
+    "sheet1":{
+        
+    }
+}
+
+let slelectedSheet="sheet1";
+let totalSheets=1;
+
+
 $(document).ready(function(){
  let cellContainer=$(".input-cell-container");
 
@@ -51,7 +75,7 @@ $(document).ready(function(){
        // top cell
        if(rowId>1){
          let topCellSelected=$(`#row-${rowId-1}-col-${colId}`).hasClass("selected");
-         console.log(topCellSelected);
+         //console.log(topCellSelected);
           if(topCellSelected){
             $(this).addClass("top-cell-selected");
             $(`#row-${rowId-1}-col-${colId}`).addClass("bottom-cell-selected");
@@ -99,7 +123,33 @@ $(document).ready(function(){
       //till here end<-----
   	  $(this).addClass("selected");
     }
+    changeHeader(this);
   });
+
+
+    function changeHeader(ele){
+        let[rowId,colId]=getRowCol(ele);
+        let cellInfo=defaultProperties;
+        if(cellData[slelectedSheet][rowId]&&cellData[slelectedSheet][rowId][colId]){
+            cellInfo=cellData[slelectedSheet][rowId][colId];
+        }
+
+        cellInfo["font-weight"] ? $(".icon-bold").addClass("selected") : $(".icon-bold").removeClass("selected");
+        cellInfo["font-style"] ? $(".icon-italic").addClass("selected"):$(".icon-italic").removeClass("selected");
+        cellInfo["text-decoration"] ? $(".icon-underline").addClass("selected"):$(".icon-underline").removeClass("selected");
+
+        
+
+        let alignment=cellInfo["text-align"];
+        $(".align-icon.selected").removeClass("selected");
+        $(".icon-align-"+alignment).addClass("selected");
+
+    }
+
+
+
+
+
   $(".input-cell").dblclick(function(){
      $(".input-cell.selected").removeClass("selected");
      $(this).addClass("selected");
@@ -117,7 +167,9 @@ $(document).ready(function(){
     $(".column-name-container").scrollLeft(this.scrollLeft);
      $(".row-name-container").scrollTop(this.scrollTop);
  });
- 
+
+ });
+//////////document deafult end///////
 
  function getRowCol(ele){
 
@@ -127,16 +179,47 @@ $(document).ready(function(){
   return [rowId,colId];
 
  }
- function updateCell(property,value){
+ function updateCell(property,value,defaultPossible){
     $(".input-cell.selected").each(function(){
+        //change the css property
         $(this).css(property,value);
+        //storing the cell data
+        let[rowId,colId]=getRowCol(this);
+        if(cellData[slelectedSheet][rowId]){
+            if(cellData[slelectedSheet][rowId][colId]){
+                // just update the value
+                cellData[slelectedSheet][rowId][colId][property]=value;
+            }
+            else{
+                // first create the cell with default proprety
+                cellData[slelectedSheet][rowId][colId]={...defaultProperties};
+                cellData[slelectedSheet][rowId][colId][property]=value;
+
+            }
+        }else{
+            // row does not exist
+            cellData[slelectedSheet][rowId]={};
+            cellData[slelectedSheet][rowId][colId]={...defaultProperties};
+            cellData[slelectedSheet][rowId][colId][property]=value;
+        }
+        if(defaultPossible && (JSON.stringify(cellData[slelectedSheet][rowId][colId])===JSON.stringify(defaultProperties))){
+            delete cellData[slelectedSheet][rowId][colId];
+            if( Object.keys(cellData[slelectedSheet][rowId]).length==0){
+                delete cellData[slelectedSheet][rowId];
+            }
+
+        }
+
     });
+
+    console.log(cellData );
  }
  $(".icon-bold").click(function(){
    if ($(this).hasClass("selected")){
-        updateCell("font-weight","");
+       //possible that might be the default property
+        updateCell("font-weight","",true);
     }else{
-        updateCell("font-weight","bold");
+        updateCell("font-weight","bold",false);
     }
 
 
@@ -144,9 +227,9 @@ $(document).ready(function(){
 
  $(".icon-italic").click(function(){
     if($(this).hasClass("selected")){
-        updateCell("font-style","");
+        updateCell("font-style","",true);
     }else{
-        updateCell("font-style","italic");
+        updateCell("font-style","italic",false);
     }
 
 
@@ -154,14 +237,35 @@ $(document).ready(function(){
 
  $(".icon-underline").click(function(){
     if($(this).hasClass("selected")){
-        updateCell("text-decoration","");
+        updateCell("text-decoration","",true);
     }else{
-        updateCell("text-decoration","underline");
+        updateCell("text-decoration","underline",false);
     }
 
 
  });
+ $(".icon-align-left").click(function() {
 
-
-
+     if(!$(this).hasClass("selected")) {
+        updateCell("text-align","left",true);
+    }
 });
+
+$(".icon-align-center").click(function() {
+    if(!$(this).hasClass("selected")) {
+        updateCell("text-align","center",false);
+    }
+});
+
+$(".icon-align-right").click(function() {
+    if(!$(this).hasClass("selected")) {
+        updateCell("text-align","right",false);
+    }
+});
+$(".font-family-selector").change(function(){
+    updateCell("font-family",$(this).val());
+});
+$(".font-size-selector").change(function(){
+    updateCell("font-size",$(this).val());
+});
+
