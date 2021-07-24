@@ -348,18 +348,111 @@ $(".icon-add").click(function(){
    // adding the new sheet icon
    $(".sheet-tab-container").append(` <div class="sheet-tab selected">${sheetName}</div>`);
    //event listner to return to previous sheets
-   $(".sheet-tab.selected").click(function(){
-    if(!$(this).hasClass("selected")){
-        selectSheet(this);
-    }
-}); 
+  addSheetEvents()
 
 });
-$(".sheet-tab").click(function(){
-    if(!$(this).hasClass("selected")){
+
+function addSheetEvents(){
+    $(".sheet-tab.selected").click(function(){
+      if(!$(this).hasClass("selected")){
         selectSheet(this);
-    }
+      }
+    }); 
+    $(".sheet-tab.selected").contextmenu(function(e){
+        e.preventDefault();
+        //why---
+        selectSheet(this);
+
+        if($(".sheet-options-modal").length==0){
+            $(".container").append(`
+                        <div class="sheet-options-modal">
+                        <div class="sheet-rename">Rename</div>
+                        <div class="sheet-delete">Delete</div>
+                        </div>`);
+
+
+              $(".sheet-rename").click(function(){
+                $(".container").append(` <div class="sheet-rename-modal">
+                   <h4 class="modal-title">Rename Sheet To:</h4>
+                   <input type="text" class="new-sheet-name" placeholder="Sheet-Name">
+                   <div class="action-buttons">
+                         <div class="submit-button">Rename</div>
+                         <div class="cancel-button">Cancel</div> 
+
+
+                   </div>`);
+                $(".cancel-button").click(function(){
+                    $(".sheet-rename-modal").remove();
+                })
+                $(".submit-button").click(function(){
+                    let newSheetName=$(".new-sheet-name").val();
+                    // UI changes
+                    $(".sheet-tab.selected").text(newSheetName);
+                    //storing it in data
+                     let newCellData={};
+                     for(let key in cellData){
+                        if(key!=selectedSheet){
+                            newCellData[key]=cellData[key];
+                        }else{
+                            newCellData[newSheetName]=cellData[key];
+                        }
+                     }
+                     cellData=newCellData;
+                     selectedSheet=newSheetName;
+                     $(".sheet-rename-modal").remove();
+                     console.log(cellData);
+
+                });
+
+
+            });
+
+             $(".sheet-delete").click(function(){
+                //make an modal
+
+                if(Object.keys(cellData).length > 1){
+                    let currSheetName=selectedSheet;
+                    let currSheet=$(".sheet-tab.selected");
+                    let currSheetIndex=Object.keys(cellData).indexOf(selectedSheet);
+                    if(currSheetIndex==0){
+                        $(".sheet-tab.selected").next().click();
+                    }
+                    else{
+                        $(".sheet-tab.selected").prev().click();
+                    }
+                    delete cellData[currSheetName];
+                    currSheet.remove();
+                }else{
+                    alert("not possible");
+                    //make an modal;
+                }
+
+             }) ;
+
+
+
+            // change it
+            $(".sheet-options-modal").css("left",e.pageX+"px");
+
+        }
+          
+
+           
+
+
+
+    });
+
+
+}
+$(".container").click(function(){
+  $(".sheet-options-modal").remove();
+
+
 });
+
+addSheetEvents();
+
 function selectSheet(ele){
     $(".sheet-tab.selected").removeClass("selected");
     $(ele).addClass("selected");
@@ -367,4 +460,5 @@ function selectSheet(ele){
     selectedSheet=$(ele).text();
     loadSheet();
 }
+
 
